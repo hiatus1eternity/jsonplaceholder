@@ -4,7 +4,7 @@ import requests
 from json_payload_validator import validate
 import logging
 import json
-from utils import req
+from utils import req,request
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -116,24 +116,22 @@ def test_posts_put():
     assert r.status_code == 200
 
 def test_posts_patch():
-    id = 100
-    r = requests.patch(j_site+"/posts/"+str(id),data={"title":"post_19:55"})
+    url = j_site+"/posts/"
+    data_name = "title"
     schema = {
     "type": "object",
     "properties": {
         "userId": {"type": "integer"},
-        "id": {"type": "integer", "value":100},
+        "id": {"type": "integer"},
         "title": {"type": "string","value":"post_19:55"},
         "body": {"type": "string"}
         }
     }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    assert request.patch_scheme(url,data_name,schema) == None
+    assert request.patch_code(url,data_name) == 200
 
 def test_posts_delete():
-    url = j_site + "/posts/" + str(100)
-    r = requests.delete(url)
-    assert r.status_code == 200
+    url = j_site+"/posts/"
+    assert request.delete(url) == 200
 
 

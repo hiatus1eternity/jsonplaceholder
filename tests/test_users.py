@@ -4,7 +4,7 @@ import requests
 from json_payload_validator import validate
 import logging
 import json
-from utils import req
+from utils import req,request
 logging.basicConfig(level=logging.DEBUG)
 
 j_site = 'https://jsonplaceholder.typicode.com'
@@ -188,12 +188,11 @@ def test_users_put():
 
 def test_users_patch():
     url = j_site+"/users/"
-    l = req.json_lenght(url)
-    r = requests.patch(j_site+"/users/"+str(l),data={"name":"post_19:55"})
+    data_name="name"
     schema = {
         "type": "object",
         "properties": {
-            "id": {"type": "integer","value":l},
+            "id": {"type": "integer"},
             "name":{"type":"string", "value":"post_19:55"},
             "username":{"type":"string"},
             "email": {"type": "string","format":"email"},
@@ -222,13 +221,9 @@ def test_users_patch():
                        }
         }
     }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    assert request.patch_scheme(url,data_name,schema) == None
+    assert request.patch_code(url,data_name) == 200
 
 def test_comments_delete():
     url = j_site+"/users/"
-    l = req.json_lenght(url)
-    url = j_site + "/users/" + str(l)
-    r = requests.delete(url)
-    assert r.status_code == 200
+    assert request.delete(url) == 200

@@ -4,7 +4,7 @@ import requests
 from json_payload_validator import validate
 import logging
 import json
-from utils import req
+from utils import req,request
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -117,25 +117,20 @@ def test_albums_put():
 
 def test_albums_patch():
     url = j_site+"/albums/"
-    alb = req.json_lenght(url)
-    r = requests.patch(j_site+"/albums/"+str(alb),data={"title":"post_19:55"})
+    data_name="title"
     schema = {
     "type": "object",
     "properties": {
         "userId": {"type": "integer"},
-        "id": {"type": "integer", "value":alb},
+        "id": {"type": "integer"},
         "title": {"type": "string","value":"post_19:55"}
         }
     }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    assert request.patch_scheme(url,data_name,schema) == None
+    assert request.patch_code(url,data_name) == 200
 
 def test_albums_delete():
     url = j_site+"/albums/"
-    alb = req.json_lenght(url)
-    url = j_site + "/albums/" + str(alb)
-    r = requests.delete(url)
-    assert r.status_code == 200
+    assert request.delete(url) == 200
 
 
