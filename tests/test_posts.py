@@ -5,11 +5,10 @@ from json_payload_validator import validate
 import logging
 import json
 from utils import req,request
+import globals as gbl
 
 logging.basicConfig(level=logging.DEBUG)
 
-
-j_site = 'https://jsonplaceholder.typicode.com'
 
 def test_posts_get():
     schema = {
@@ -21,13 +20,13 @@ def test_posts_get():
             "body": {"type": "string"}
         }
     }
-    r = requests.get(j_site+"/posts")
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    url = gbl.j_site+"/posts"
+    gt = request.get_scheme(url,schema)
+    assert gt[0] == None
+    assert gt[1] == 200
 
 def test_posts_last_get():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     l = req.json_lenght(url)
     r = requests.get(url+str(l))
     schema = {
@@ -44,11 +43,11 @@ def test_posts_last_get():
     assert r.status_code == 200
 
 def test_posts_comm_get():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     l = req.json_lenght(url)
     r = requests.get(url+str(l)+"/comments")
     payload = {"postId":l}
-    r1 = requests.get(j_site+"/comments", params=payload)
+    r1 = requests.get(gbl.j_site+"/comments", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -65,10 +64,10 @@ def test_posts_comm_get():
     assert r.status_code == 200
 
 def test_posts_user_get():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
     payload = {"userId":l}
-    r = requests.get(j_site+"/posts", params=payload)
+    r = requests.get(gbl.j_site+"/posts", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -84,7 +83,7 @@ def test_posts_user_get():
 
 def test_posts_post():
     userId = 10
-    r = requests.post(j_site+"/posts",data={"title":"post_19:55","body":"this is simple new post by me","userId":userId})
+    r = requests.post(gbl.j_site+"/posts",data={"title":"post_19:55","body":"this is simple new post by me","userId":userId})
     schema = {
     "type": "object",
     "properties": {
@@ -101,7 +100,7 @@ def test_posts_post():
 def test_posts_put():
     userId = 10
     id = 100
-    r = requests.put(j_site+"/posts/"+str(id),data={"title":"post_19:55","body":"this is simple new post by me","userId":userId,"id":id})
+    r = requests.put(gbl.j_site+"/posts/"+str(id),data={"title":"post_19:55","body":"this is simple new post by me","userId":userId,"id":id})
     schema = {
     "type": "object",
     "properties": {
@@ -116,7 +115,7 @@ def test_posts_put():
     assert r.status_code == 200
 
 def test_posts_patch():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     data_name = "title"
     schema = {
     "type": "object",
@@ -127,11 +126,12 @@ def test_posts_patch():
         "body": {"type": "string"}
         }
     }
-    assert request.patch_scheme(url,data_name,schema) == None
-    assert request.patch_code(url,data_name) == 200
+    pt = request.patch_scheme(url,data_name,schema)
+    assert pt[0] == None
+    assert pt[1] == 200
 
 def test_posts_delete():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     assert request.delete(url) == 200
 
 

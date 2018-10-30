@@ -5,11 +5,10 @@ from json_payload_validator import validate
 import logging
 import json
 from utils import req,request
-
+import globals as gbl
 logging.basicConfig(level=logging.DEBUG)
 
 
-j_site = 'https://jsonplaceholder.typicode.com'
 
 def test_albums_get():
     schema = {
@@ -20,13 +19,13 @@ def test_albums_get():
             "title": {"type": "string"}
         }
     }
-    r = requests.get(j_site+"/albums")
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    url = gbl.j_site+"/albums"
+    gt = request.get_scheme(url,schema)
+    assert gt[0] == None
+    assert gt[1] == 200
 
 def test_albums_last_get():
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     l = req.json_lenght(url)
     r = requests.get(url+str(l))
     schema = {
@@ -42,11 +41,11 @@ def test_albums_last_get():
     assert r.status_code == 200
 
 def test_albums_phot_get():
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     l = req.json_lenght(url)
     r = requests.get(url+str(l)+"/photos")
     payload = {"albumId":l}
-    r1 = requests.get(j_site+"/photos", params=payload)
+    r1 = requests.get(gbl.j_site+"/photos", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -63,10 +62,10 @@ def test_albums_phot_get():
     assert r.status_code == 200
 
 def test_albums_user_get():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
     payload = {"userId":l}
-    r = requests.get(j_site+"/albums", params=payload)
+    r = requests.get(gbl.j_site+"/albums", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -80,11 +79,11 @@ def test_albums_user_get():
     assert r.status_code == 200
 
 def test_albums_post():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     alb = req.json_lenght(url)
-    r = requests.post(j_site+"/albums",data={"title":"post_19:55","userId":l})
+    r = requests.post(gbl.j_site+"/albums",data={"title":"post_19:55","userId":l})
     schema = {
     "type": "object",
     "properties": {
@@ -98,11 +97,11 @@ def test_albums_post():
     assert r.status_code == 201
 
 def test_albums_put():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     alb = req.json_lenght(url)
-    r = requests.put(j_site+"/albums/"+str(alb),data={"title":"post_19:55","userId":l,"id":alb})
+    r = requests.put(gbl.j_site+"/albums/"+str(alb),data={"title":"post_19:55","userId":l,"id":alb})
     schema = {
     "type": "object",
     "properties": {
@@ -116,7 +115,7 @@ def test_albums_put():
     assert r.status_code == 200
 
 def test_albums_patch():
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     data_name="title"
     schema = {
     "type": "object",
@@ -126,11 +125,12 @@ def test_albums_patch():
         "title": {"type": "string","value":"post_19:55"}
         }
     }
-    assert request.patch_scheme(url,data_name,schema) == None
-    assert request.patch_code(url,data_name) == 200
+    pt = request.patch_scheme(url,data_name,schema)
+    assert pt[0] == None
+    assert pt[1] == 200
 
 def test_albums_delete():
-    url = j_site+"/albums/"
+    url = gbl.j_site+"/albums/"
     assert request.delete(url) == 200
 
 

@@ -25,8 +25,9 @@ class request:
         tod = req.json_lenght(url)
         r = requests.patch(url + str(tod), data={data_name: "post_19:55"})
         error = validate(r.json(), schema)
-        return error
-    def patch_code(url,data_name):
-        tod = req.json_lenght(url)
-        r = requests.patch(url + str(tod), data={data_name: "post_19:55"})
-        return r.status_code
+        return error,r.status_code
+
+    def get_scheme(url,schema):
+        r = requests.get(url)
+        error = validate(r.json(), schema)
+        return error,r.status_code

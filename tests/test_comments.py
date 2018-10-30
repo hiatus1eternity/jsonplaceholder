@@ -5,9 +5,9 @@ from json_payload_validator import validate
 import logging
 import json
 from utils import req,request
+import globals as gbl
 logging.basicConfig(level=logging.DEBUG)
 
-j_site = 'https://jsonplaceholder.typicode.com'
 
 def test_comments_get():
     schema = {
@@ -20,13 +20,13 @@ def test_comments_get():
             "body": {"type": "string"}
         }
     }
-    r = requests.get(j_site+"/comments")
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    url = gbl.j_site+"/comments"
+    gt = request.get_scheme(url,schema)
+    assert gt[0] == None
+    assert gt[1] == 200
 
 def test_comments_last_get():
-    url = j_site+"/comments/"
+    url = gbl.j_site+"/comments/"
     l = req.json_lenght(url)
     url = url+str(l)
     r = requests.get(url)
@@ -45,10 +45,10 @@ def test_comments_last_get():
     assert r.status_code == 200
 
 def test_comments_postId_get():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     l = req.json_lenght(url)
     payload = {"postId":l}
-    r = requests.get(j_site+"/comments", params=payload)
+    r = requests.get(gbl.j_site+"/comments", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -64,11 +64,11 @@ def test_comments_postId_get():
     assert r.status_code == 200
 
 def test_comments_post():
-    url = j_site+"/posts/"
+    url = gbl.j_site+"/posts/"
     postId = req.json_lenght(url)
-    url = j_site+"/comments/"
+    url = gbl.j_site+"/comments/"
     l = req.json_lenght(url)
-    r = requests.post(j_site+"/comments",data={"name":"comm_19:55","body":"this is simple new post by me","postId":postId,"email":"my@my.my"})
+    r = requests.post(gbl.j_site+"/comments",data={"name":"comm_19:55","body":"this is simple new post by me","postId":postId,"email":"my@my.my"})
     schema = {
     "type": "object",
     "properties": {
@@ -84,9 +84,9 @@ def test_comments_post():
     assert r.status_code == 201
 
 def test_comments_put():
-    url = j_site+"/comments/"
+    url = gbl.j_site+"/comments/"
     l = req.json_lenght(url)
-    r = requests.put(j_site+"/comments/"+str(l),data={"name":"comm_19:55","body":"this is simple new post by me","postId":5,"email":"my@my.my"})
+    r = requests.put(gbl.j_site+"/comments/"+str(l),data={"name":"comm_19:55","body":"this is simple new post by me","postId":5,"email":"my@my.my"})
     schema = {
     "type": "object",
     "properties": {
@@ -102,7 +102,7 @@ def test_comments_put():
     assert r.status_code == 200
 
 def test_comments_patch():
-    url = j_site+"/comments/"
+    url = gbl.j_site+"/comments/"
     data_name = "name"
     schema = {
     "type": "object",
@@ -115,9 +115,10 @@ def test_comments_patch():
 
         }
     }
-    assert request.patch_scheme(url,data_name,schema) == None
-    assert request.patch_code(url,data_name) == 200
+    pt = request.patch_scheme(url,data_name,schema)
+    assert pt[0] == None
+    assert pt[1] == 200
 
 def test_comments_delete():
-    url = j_site + "/comments/"
+    url = gbl.j_site + "/comments/"
     assert request.delete(url) == 200

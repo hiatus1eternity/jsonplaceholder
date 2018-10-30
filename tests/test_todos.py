@@ -5,11 +5,10 @@ from json_payload_validator import validate
 import logging
 import json
 from utils import req,request
-
+import globals as gbl
 logging.basicConfig(level=logging.DEBUG)
 
 
-j_site = 'https://jsonplaceholder.typicode.com'
 
 def test_todos_get():
     schema = {
@@ -21,13 +20,13 @@ def test_todos_get():
             "completed": {"type": "boolean"}
         }
     }
-    r = requests.get(j_site+"/todos")
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+    url = gbl.j_site+"/todos"
+    gt = request.get_scheme(url,schema)
+    assert gt[0] == None
+    assert gt[1] == 200
 
 def test_todos_last_get():
-    url = j_site+"/todos/"
+    url = gbl.j_site+"/todos/"
     l = req.json_lenght(url)
     r = requests.get(url+str(l))
     schema = {
@@ -44,10 +43,10 @@ def test_todos_last_get():
     assert r.status_code == 200
 
 def test_todos_users_get():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
     payload = {"userId":l}
-    r = requests.get(j_site+"/todos", params=payload)
+    r = requests.get(gbl.j_site+"/todos", params=payload)
     schema = {
         "type": "array",
         "properties": {
@@ -62,11 +61,11 @@ def test_todos_users_get():
     assert r.status_code == 200
 
 def test_todos_post():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
-    url = j_site+"/todos/"
+    url = gbl.j_site+"/todos/"
     tod = req.json_lenght(url)
-    r = requests.post(j_site+"/todos",data={"title":"post_19:55","completed":False,"userId":l})
+    r = requests.post(gbl.j_site+"/todos",data={"title":"post_19:55","completed":False,"userId":l})
     schema = {
     "type": "object",
     "properties": {
@@ -81,11 +80,11 @@ def test_todos_post():
     assert r.status_code == 201
 
 def test_todos_put():
-    url = j_site+"/users/"
+    url = gbl.j_site+"/users/"
     l = req.json_lenght(url)
-    url = j_site+"/todos/"
+    url = gbl.j_site+"/todos/"
     tod = req.json_lenght(url)
-    r = requests.put(j_site+"/todos/"+str(tod),data={"title":"post_19:55","completed":False,"userId":l,"id":tod})
+    r = requests.put(gbl.j_site+"/todos/"+str(tod),data={"title":"post_19:55","completed":False,"userId":l,"id":tod})
     schema = {
     "type": "object",
     "properties": {
@@ -100,7 +99,7 @@ def test_todos_put():
     assert r.status_code == 200
 
 def test_todos_patch():
-    url = j_site+"/todos/"
+    url = gbl.j_site+"/todos/"
     data_name = "title"
     schema = {
     "type": "object",
@@ -111,9 +110,10 @@ def test_todos_patch():
         "completed": {"type": "boolean"}
         }
     }
-    assert request.patch_scheme(url,data_name,schema) == None
-    assert request.patch_code(url,data_name) == 200
+    pt = request.patch_scheme(url,data_name,schema)
+    assert pt[0] == None
+    assert pt[1] == 200
 
 def test_todos_delete():
-    url = j_site+"/todos/"
+    url = gbl.j_site+"/todos/"
     assert request.delete(url) == 200
