@@ -1,136 +1,65 @@
 import pytest
 
+import json
+import random
+import logging
 import requests
 from json_payload_validator import validate
-import logging
-import json
 from utils import req,request
 import globals as gbl
 logging.basicConfig(level=logging.DEBUG)
 
-
-
 def test_albums_get():
-    schema = {
-        "type": "array",
-        "properties": {
-            "userId": {"type": "integer","minimum":1},
-            "id": {"type": "integer","minimum":1,"uniqueItems": True},
-            "title": {"type": "string"}
-        }
-    }
-    url = gbl.j_site+"/albums"
-    gt = request.get_scheme(url,schema)
-    assert gt[0] == None
-    assert gt[1] == 200
+    # Тест валидирует json схему запроса альбомов и код ответа.
+    request.get_simple(gbl.albums_url,gbl.schema_albums_get)
 
-def test_albums_last_get():
-    url = gbl.j_site+"/albums/"
-    l = req.json_lenght(url)
-    r = requests.get(url+str(l))
-    schema = {
-        "type": "object",
-        "properties": {
-            "userId": {"type": "integer"},
-            "id": {"type": "integer","value":l},
-            "title": {"type": "string"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+@pytest.fixture(scope="function", params=[1,random.randint(2,99),100])
+def param_albums(request):
+    return request.param
 
-def test_albums_phot_get():
-    url = gbl.j_site+"/albums/"
-    l = req.json_lenght(url)
-    r = requests.get(url+str(l)+"/photos")
-    payload = {"albumId":l}
-    r1 = requests.get(gbl.j_site+"/photos", params=payload)
-    schema = {
-        "type": "array",
-        "properties": {
-            "albumId":{"type":"integer","value":l},
-            "url":{"type": "string"},
-            "id": {"type": "integer","minimum":1,"uniqueItems": True},
-            "title": {"type": "string"},
-            "thumbnailUrl": {"type": "string"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert r.json() == r1.json()
-    assert error == None
-    assert r.status_code == 200
+def test_albums_element_get(param_albums):
+    url = gbl.albums_url+str(param_albums)
+    request.get_element(url,gbl.schema_albums_element_get,'id',param_albums)
 
-def test_albums_user_get():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    payload = {"userId":l}
-    r = requests.get(gbl.j_site+"/albums", params=payload)
-    schema = {
-        "type": "array",
-        "properties": {
-            "userId":{"type":"integer","value":l},
-            "id": {"type": "integer","minimum":1,"uniqueItems": True},
-            "title": {"type": "string"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+def test_albums_phot_get(param_albums):
+    # get запрос альбомов, группировка albumId, 2 способа запроса 1 контента.
+    url1 = gbl.albums_url+str(param_albums)+"/photos"
+    url2 = gbl.photos_url
+    payload = {"albumId":param_albums}
+    request.get_simple(url1,gbl.schema_albums_phot_get(param_albums))
+    request.get_payload(url2,gbl.schema_albums_phot_get(param_albums),payload)
 
-def test_albums_post():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    url = gbl.j_site+"/albums/"
-    alb = req.json_lenght(url)
-    r = requests.post(gbl.j_site+"/albums",data={"title":"post_19:55","userId":l})
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "string","value":l},
-        "id": {"type": "integer", "value":alb+1},
-        "title": {"type": "string","value":"post_19:55"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 201
+@pytest.fixture(scope="function", params=[1,random.randint(2,9),10])
+def param_users(request):
+    return request.param
 
-def test_albums_put():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    url = gbl.j_site+"/albums/"
-    alb = req.json_lenght(url)
-    r = requests.put(gbl.j_site+"/albums/"+str(alb),data={"title":"post_19:55","userId":l,"id":alb})
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "string","value":l},
-        "id": {"type": "integer", "value":alb},
-        "title": {"type": "string","value":"post_19:55"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+def test_albums_user_get(param_users):
+    # get запрос альбомов, группировка по UserId
+    url = gbl.albums_url
+    payload = {"userId":param_users}
+    request.get_payload(url,gbl.schema_albums_user_get(param_users),payload)
 
-def test_albums_patch():
-    url = gbl.j_site+"/albums/"
-    data_name="title"
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "integer"},
-        "id": {"type": "integer"},
-        "title": {"type": "string","value":"post_19:55"}
-        }
-    }
-    pt = request.patch_scheme(url,data_name,schema)
-    assert pt[0] == None
-    assert pt[1] == 200
+def test_albums_post(param_users):
+    # post запрос на добавление нового альбома, проверяем при разных userId
+    le = req.json_lenght(gbl.albums_url)+1
+    payload = {"title":"post_19:55","userId":param_users}
+    request.post_simple(gbl.albums_url,gbl.schema_albums_post(param_users,le),
+                        payload)
 
-def test_albums_delete():
-    url = gbl.j_site+"/albums/"
-    assert request.delete(url) == 200
+def test_albums_put(param_albums,param_users):
+    # put запрос, изменяем данные крайних альбомов и одного случайного.
+    url = gbl.albums_url+str(param_albums)
+    payload = {"title":"post_19:55","userId":param_users,"id":param_albums}
+    request.put_simple(url,gbl.schema_albums_post(param_users,param_albums),
+                       payload)
 
+def test_albums_patch(param_albums):
+    # patch запрос, изменяем поле title крайних альбомов и одного случайного.
+    url = gbl.albums_url+str(param_albums)
+    payload = {"title":"post_19:55"}
+    request.patch_simple(url,gbl.schema_albums_patch(param_albums),payload)
 
+def test_albums_delete(param_albums):
+    # Удаляем альбом, проверяем код ответа
+    url = gbl.albums_url+str(param_albums)
+    request.delete_simple(url)

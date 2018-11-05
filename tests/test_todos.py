@@ -1,119 +1,61 @@
 import pytest
 
+import json
+import random
+import logging
 import requests
 from json_payload_validator import validate
-import logging
-import json
 from utils import req,request
 import globals as gbl
+
 logging.basicConfig(level=logging.DEBUG)
 
 
-
 def test_todos_get():
-    schema = {
-        "type": "array",
-        "properties": {
-            "userId": {"type": "integer","minimum":1},
-            "id": {"type": "integer","minimum":1,"uniqueItems": True},
-            "title": {"type": "string"},
-            "completed": {"type": "boolean"}
-        }
-    }
-    url = gbl.j_site+"/todos"
-    gt = request.get_scheme(url,schema)
-    assert gt[0] == None
-    assert gt[1] == 200
+    # Тест валидирует json схему запроса заданий и код ответа.
+    request.get_simple(gbl.todos_url,gbl.schema_todos_get)
 
-def test_todos_last_get():
-    url = gbl.j_site+"/todos/"
-    l = req.json_lenght(url)
-    r = requests.get(url+str(l))
-    schema = {
-        "type": "object",
-        "properties": {
-            "userId": {"type": "integer"},
-            "id": {"type": "integer","value":l},
-            "title": {"type": "string"},
-            "completed": {"type": "boolean"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+@pytest.fixture(scope="function", params=[1,random.randint(2,199),200])
+def param_todos(request):
+    return request.param
 
-def test_todos_users_get():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    payload = {"userId":l}
-    r = requests.get(gbl.j_site+"/todos", params=payload)
-    schema = {
-        "type": "array",
-        "properties": {
-            "userId": {"type": "integer","value":l},
-            "id": {"type": "integer"},
-            "title": {"type": "string"},
-            "completed": {"type": "boolean"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+def test_todos_element_get(param_todos):
+    # Тест свойств элементов заданий. Проверяем граничные значения и 1 случайное.
+    url = gbl.todos_url+str(param_todos)
+    request.get_element(url,gbl.schema_todos_element_get,'id',param_todos)
 
-def test_todos_post():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    url = gbl.j_site+"/todos/"
-    tod = req.json_lenght(url)
-    r = requests.post(gbl.j_site+"/todos",data={"title":"post_19:55","completed":False,"userId":l})
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "string"},
-        "id": {"type": "integer", "value":tod+1},
-        "title": {"type": "string","value":"post_19:55"},
-        "completed": {"type": "string"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 201
+@pytest.fixture(scope="function", params=[1,random.randint(2,9),10])
+def param_users(request):
+    return request.param
 
-def test_todos_put():
-    url = gbl.j_site+"/users/"
-    l = req.json_lenght(url)
-    url = gbl.j_site+"/todos/"
-    tod = req.json_lenght(url)
-    r = requests.put(gbl.j_site+"/todos/"+str(tod),data={"title":"post_19:55","completed":False,"userId":l,"id":tod})
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "string"},
-        "id": {"type": "integer", "value":tod},
-        "title": {"type": "string","value":"post_19:55"},
-        "completed": {"type": "string"}
-        }
-    }
-    error = validate(r.json(), schema)
-    assert error == None
-    assert r.status_code == 200
+def test_todos_user_get(param_users):
+    # get запрос заданий, группировка по UserId
+    url = gbl.todos_url
+    payload = {"userId":param_users}
+    request.get_payload(url,gbl.schema_todos_user_get(param_users),payload)
 
-def test_todos_patch():
-    url = gbl.j_site+"/todos/"
-    data_name = "title"
-    schema = {
-    "type": "object",
-    "properties": {
-        "userId": {"type": "integer"},
-        "id": {"type": "integer"},
-        "title": {"type": "string","value":"post_19:55"},
-        "completed": {"type": "boolean"}
-        }
-    }
-    pt = request.patch_scheme(url,data_name,schema)
-    assert pt[0] == None
-    assert pt[1] == 200
+def test_todos_post(param_users):
+    # post запрос на добавление нового задания, проверяем при разных userId
+    le = req.json_lenght(gbl.todos_url)+1
+    payload = {"title":"post_19:55","completed":False,"userId":param_users}
+    request.post_simple(gbl.todos_url,gbl.schema_todos_post(param_users,le),
+                        payload)
 
-def test_todos_delete():
-    url = gbl.j_site+"/todos/"
-    assert request.delete(url) == 200
+def test_todos_put(param_todos,param_users):
+    # put запрос, изменяем данные крайних заданий и одного случайного.
+    url = gbl.todos_url+str(param_todos)
+    payload = {"title":"post_19:55","completed":False,"userId":param_users,
+              "id":param_todos}
+    request.put_simple(url,gbl.schema_todos_post(param_users,param_todos),
+                       payload)
+
+def test_todos_patch(param_todos):
+    # patch запрос, изменяем поле title крайних заданий и одного случайного.
+    url = gbl.todos_url+str(param_todos)
+    payload = {"title":"post_19:55"}
+    request.patch_simple(url,gbl.schema_todos_patch(param_todos),payload)
+
+def test_todos_delete(param_todos):
+    # Удаляем задание, проверяем код ответа
+    url = gbl.todos_url+str(param_todos)
+    request.delete_simple(url)
