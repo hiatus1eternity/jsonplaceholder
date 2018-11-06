@@ -13,7 +13,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 def test_users_get():
     # Тест валидирует json схему запроса юзеров и код ответа.
-    request.get_simple(gbl.users_url,gbl.schema_users_get)
+    q = request()
+    q.get_simple(gbl.users_url,gbl.schema_users_get)
 
 @pytest.fixture(scope="function", params=[1,random.randint(2,9),10])
 def param_users(request):
@@ -21,12 +22,14 @@ def param_users(request):
 
 def test_users_element_get(param_users):
     # Проверяем граничные значения и 1 случайное.
+    q = request()
     url = gbl.users_url+str(param_users)
-    request.get_element(url,gbl.schema_users_element_get,'id',param_users)
+    q.get_element(url,gbl.schema_users_element_get,'id',param_users)
 
 def test_users_post():
     # post запрос на добавление нового юзера.
-    le = req.json_lenght(gbl.users_url)+1
+    q = request()
+    le = q.json_lenght(gbl.users_url)+1
     payload = {
         "name":"Glenna Reichert",
         "username":"Delphine",
@@ -46,10 +49,11 @@ def test_users_post():
             "bs":"aggregate real-time technologies"
             }
         }
-    request.post_simple(gbl.users_url,gbl.schema_users_post(le),payload)
+    q.post_simple(gbl.users_url,gbl.schema_users_post(le),payload)
 
 def test_users_put(param_users):
     # Изменяем данные крайних юзеров и одного случайного.
+    q = request()
     url = gbl.users_url+str(param_users)
     payload = {
         "id":param_users,
@@ -71,15 +75,17 @@ def test_users_put(param_users):
             "bs":"aggregate real-time technologies"
             }
         }
-    request.put_simple(url,gbl.schema_users_post(param_users),payload)
+    q.put_simple(url,gbl.schema_users_post(param_users),payload)
 
 def test_users_patch(param_users):
     # patch запрос, изменяем поле name крайних юзеров и одного случайного.
+    q = request()
     url = gbl.users_url+str(param_users)
     payload = {"name":"post_19:55"}
-    request.patch_simple(url,gbl.schema_users_patch(param_users),payload)
+    q.patch_simple(url,gbl.schema_users_patch(param_users),payload)
 
 def test_users_delete(param_users):
     # Удаляем юзера, проверяем код ответа
+    q = request()
     url = gbl.users_url+str(param_users)
-    request.delete_simple(url)
+    q.delete_simple(url)
