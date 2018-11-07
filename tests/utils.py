@@ -7,58 +7,68 @@ from json_payload_validator import validate
 
 class req:
     #Вспомогательный класс
-    def json_lenght(self,url):
+
+    def __init__(self,url):
+        self.url = url
+
+    def json_lenght(self):
         # Метод вычисляет количество элементов массива в ответе json
-        self.r = requests.get(url)
-        self.json_data = json.dumps(self.r.json())
-        self.item_dict = json.loads(self.json_data)
-        self.le = len(self.item_dict)
-        return self.le
+        r = requests.get(self.url)
+        json_data = json.dumps(r.json())
+        item_dict = json.loads(json_data)
+        le = len(item_dict)
+        return le
 
 
 class request(req):
     #Класс используется для отправки запросов и валидации ответов
-    def get_simple(self,url,schema):
+
+    def __init__(self,url,schema,payload=0):
+        self.url = url
+        self.schema = schema
+        self.payload = payload
+
+    def get_simple(self):
         # Метод отправляет простой get запрос, валидирует json и код ответа
-        self.r = requests.get(url)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 200
+        r = requests.get(self.url)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 200
 
-    def get_element(self,url,schema,param,value):
+    def get_element(self,param,value):
         # Метод в дополнение к get запросу валилирует параметр из ответа
-        self.r = requests.get(url)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 200
-        assert self.r.json()[param] == value
+        r = requests.get(self.url)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 200
+        assert r.json()[param] == value
 
-    def get_payload(self,url,schema,payload):
+    def get_payload(self):
         # Метод отправляет get запрос с параметрами
-        self.r = requests.get(url,params=payload)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 200
+        r = requests.get(self.url,params=self.payload)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 200
 
-    def post_simple(self,url,schema,payload):
+    def post_simple(self):
         #Метод отправляет post запрос
-        self.r = requests.post(url,data=payload)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 201
+        r = requests.post(self.url,data=self.payload)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 201
 
-    def put_simple(self,url,schema,payload):
-        self.r = requests.put(url,data=payload)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 200
+    def put_simple(self):
+        r = requests.put(self.url,data=self.payload)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 200
 
-    def patch_simple(self,url,schema,payload):
-        self.r = requests.patch(url,data=payload)
-        self.error = validate(self.r.json(),schema)
-        assert self.error == None
-        assert self.r.status_code == 200
+    def patch_simple(self):
+        r = requests.patch(self.url,data=self.payload)
+        error = validate(r.json(),self.schema)
+        assert error == None
+        assert r.status_code == 200
 
-    def delete_simple(self,url):
-        self.r = requests.delete(url)
-        assert self.r.status_code == 200
+    def delete_simple(self):
+        r = requests.delete(self.url)
+        assert r.status_code == 200
